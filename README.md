@@ -1,58 +1,39 @@
-[![NPM version](https://badge.fury.io/js/markdown.png)](http://badge.fury.io/js/markdown)
-[![Build Status](https://secure.travis-ci.org/evilstreak/markdown-js.png)](https://travis-ci.org/evilstreak/markdown-js)
-[![Dependency Status](https://gemnasium.com/evilstreak/markdown-js.png)](https://gemnasium.com/evilstreak/markdown-js)
+# upraised-markdown
 
-# markdown-js
+An Upraised dialect of markdown, implemented with [markdown-js], to capture key elements of Upraised content / metadata.  Includes tests.
 
-Yet another Markdown parser, this time for JavaScript. There's a few
-options that precede this project but they all treat Markdown to HTML
-conversion as a single step process. You pass Markdown in and get HTML
-out, end of story. We had some pretty particular views on how the
-process should actually look, which include:
+Key differences:
 
-  * Producing well-formed HTML. This means that `em` and `strong` nesting
-    is important, as is the ability to output as both HTML and XHTML
-  * Having an intermediate representation to allow processing of parsed
-    data (we in fact have two, both [JsonML]: a markdown tree and an HTML tree)
-  * Being easily extensible to add new dialects without having to
-    rewrite the entire parsing mechanics
-  * Having a good test suite. The only test suites we could find tested
-    massive blocks of input, and passing depended on outputting the HTML
-    with exactly the same whitespace as the original implementation
+* Inline or block equation, returned as `<span>` or `<p>` with `class="equation"`
+```text
+    This is an equation: %% 1 + 2 = 3 %%
 
-[JsonML]: http://jsonml.org/ "JSON Markup Language"
+    And a block equation:
+    %% 4 + 5 = 9
+```
+* Inline defined term, with optional definition, returned as `<span>` of `class="term"` with an optional `data-definition` attribute.
+```text
+    The two {{parallel | side by side and having the same distance continuously between them}} lines will never meet.
 
-## Installation
+    The {{parallelogram}} is a type of trapezoid.
+```
+* Block-level callout, with inline formatting, returned as `<p>`with `class="callout"`
+```text
+    !! This is really *important*!
+```
+* No headers or code blocks
 
-Just the `markdown` library:
+[markdown-js]: https://github.com/evilstreak/markdown-js
 
-    npm install markdown
-
-Optionally, install `md2html` into your path
-
-    npm install -g markdown
-
-### In the browser
-
-If you want to use from the browser go to the [releases] page on GitHub and
-download the version you want (minified or not).
-
-[releases]: https://github.com/evilstreak/markdown-js/releases
 
 ## Usage
 
 The basic interface is:
 ```js
 md_content = "Hello.\n\n* This is markdown.\n* It is fun\n* Love it or leave it."
-html_content = markdown.toHTML( md_content );
+html_content = markdown.toHTML( md_content, 'Upraised' );
 ```
 
-toHTML also accepts a dialect argument:
-
-```js
-md_content = "Vessel     | Captain\n-----------|-------------\nNCC-1701   | James T Kirk\nNCC-1701 A | James T Kirk\nNCC-1701 D | Picard";
-html_content = markdown.toHTML( md_content, 'Maruku');
-```
 
 ### Node
 
@@ -62,13 +43,6 @@ The simple way to use it with Node is:
 var markdown = require( "markdown" ).markdown;
 console.log( markdown.toHTML( "Hello *World*!" ) );
 ```
-
-#### Older versions of node
-
-We only officially support node >= 0.10 as the libraries we use for building
-and testing don't work on older versions of node. That said since this module
-is so simple and doesn't use any parts of the node API if you use the pre-built
-version and find a bug let us know and we'll try and fix it.
 
 ### Browser
 
@@ -85,7 +59,7 @@ It also works in a browser; here is a complete example:
     <script>
       function Editor(input, preview) {
         this.update = function () {
-          preview.innerHTML = markdown.toHTML(input.value);
+          preview.innerHTML = markdown.toHTML(input.value, 'Upraised');
         };
         input.editor = this;
         this.update();
@@ -95,19 +69,6 @@ It also works in a browser; here is a complete example:
     </script>
   </body>
 </html>
-```
-
-### Command Line
-
-Assuming you've installed the `md2html` script (see Installation,
-above), you can convert Markdown to HTML:
-
-```bash
-# read from a file
-md2html /path/to/doc.md > /path/to/doc.html
-
-# or from stdin
-echo 'Hello *World*!' | md2html
 ```
 
 ### More Options
@@ -209,13 +170,6 @@ To run the tests under Node you will need tap installed (it's listed as a
 `devDependencies` so `npm install` from the checkout should be enough), then do
 
     $ npm test
-
-## Contributing
-
-Do the usual GitHub fork and pull request dance. Add yourself to the
-contributors section of [package.json] too if you want to.
-
-[package.json]: https://github.com/evilstreak/markdown-js/blob/master/package.json
 
 ## License
 

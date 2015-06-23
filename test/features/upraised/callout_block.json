@@ -1,0 +1,5 @@
+[ "html",
+  [ "p", "this is an equation block with inline styling:" ],
+  [ "p",
+    {"class": "callout"},
+    "This is ", [ "em", "important" ], "!" ] ]

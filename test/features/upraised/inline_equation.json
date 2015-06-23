@@ -1,0 +1,9 @@
+[ "html",
+  [ "p",
+    "this is an ",
+    [ "span", {"class": "equation"}, "inline equation" ],
+    "." ],
+  [ "p",
+    "and a second paragraph with one ",
+    [ "span", {"class": "equation"}, "inline equation" ],
+    " and another." ] ]

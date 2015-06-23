@@ -1,0 +1,5 @@
+This is a paragraph with a {{defined term}}, but no definition.
+
+This is a paragraph with a {{defined term| a term that has been defined}} and included definition.
+
+And another paragraph.

@@ -43,9 +43,16 @@ function test_dialect( dialect, features ) {
                 text = slurpFile( testFileBase + ".text" );
 
             // load the target output
-            var json = JSON.parse( slurpFile( testFileBase + ".json" ) );
+            var json;
+
+            try {
+              json = JSON.parse( slurpFile( testFileBase + ".json" ) );
+            } catch (ex) {
+              json = null;
+            }
 
             var output = markdown.toHTMLTree( text, dialect );
+            // console.error(JSON.stringify(output), null, 4);
             tap.equivalent( output, json, testName, {todo: isFile( testFileBase + ".todo" )} );
           }
           tap.end();
@@ -72,6 +79,15 @@ dialects.Gruber = [
 
 dialects.Maruku = dialects.Gruber.slice( 0 );
 dialects.Maruku.push( "meta", "definition_lists", "tables" );
+
+dialects.Upraised = [
+  "upraised",
+  'emphasis',
+  // 'links',
+  'lists',
+  // 'linebreaks',
+  // 'images'
+];
 
 // TODO if dialects/features were passed on the command line, filter to them
 // if ( args.length )
