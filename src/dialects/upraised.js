@@ -15,6 +15,50 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
     return;
   };
 
+  Upraised.block.commentHeader = function commentHeader( block, next) {
+    var m = block.match( /^(\/\/)(.*?)(?:\n|$)/ );
+
+    if ( !m )
+      return undefined;
+
+    if ( m[0].length < block.length )
+      next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
+
+    return [ ];
+  };
+
+  Upraised.block.sectionHeader = function sectionHeader( block, next ) {
+    var m = block.match( /^([@$]\w+)\s*(.*?)\s*(?:\n|$)/ );
+
+    if ( !m )
+      return undefined;
+
+    var element;
+
+    if (m[1][0] === '$') {
+      element = 'section';
+    } else {
+      element = 'field';
+    }
+
+    element += '-' + m[1].slice(1);
+
+    var header = [ element ];
+
+    if (m[2]) {
+      header.push({
+        'data-value': m[2]
+      });
+    }
+    // Array.prototype.push.apply(header, this.processInline(m[ 2 ]));
+
+    if ( m[0].length < block.length )
+      next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
+
+    return [ header ];
+  },
+
+
   Upraised.block.equationHeader = function equationHeader (block, next) {
     var m = block.match( /^(%%)\s*(.*?)\s*(?:\n|$)/ );
 
@@ -84,6 +128,88 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
     }
   };
 
+  var problemStepOrAnswerSchema = {
+    'field-image': true,
+    p: true,
+    ul: true,
+    ol: true
+  };
+
+  var conceptOrStrategySchema = {
+    'field-title': true,
+    'field-image': true,
+    'field-tease': true,
+    'section-introduction': {
+      p: true,
+      ul: true,
+      ol: true
+    },
+    'section-explanation': {
+      'section-problem': problemStepOrAnswerSchema,
+      'section-step': problemStepOrAnswerSchema,
+      'section-answer': problemStepOrAnswerSchema
+    }
+  };
+
+  var stdSchema = {
+    'section-strategy': conceptOrStrategySchema,
+    'section-concept': conceptOrStrategySchema,
+    '*': true
+  };
+
+  function markError (node) {
+    var attrs;
+    if (typeof node[1] === 'object') {
+      attrs = node[1];
+    } else {
+      attrs = {};
+      node.splice(1, 0, attrs);
+    }
+    if (attrs.class) {
+      attrs.class += ' error';
+    } else {
+      attrs.class = 'error';
+    }
+  }
+
+  function buildTree (html) {
+
+    console.error('buildTree called');
+
+    var i, nodes, node;
+    var j;
+    var stack = [[docSchema, ['html']]];
+    var schema, target;
+
+    nodes = html.slice(1);
+
+    for (i = 0; i < nodes.length; i++) {
+      node = nodes[i];
+
+      for (j = stack.length - 1; j >= 0; j--) {
+        schema = stack[j][0];
+        subSchema = schema[node[0]] || schema['*'];
+        if (subSchema) break;
+      }
+
+      if (!subSchema) {
+        // continue at same level, adding an error class to node
+        markError(node);
+        stack[stack.length - 1][1].push(node);
+      } else {
+        // reset level, based on closest schema match
+        stack = stack.slice(0, j + 1);
+        stack[stack.length - 1][1].push(node);
+        if (typeof subSchema === 'object') {
+          stack.push([subSchema, node]);
+        }
+      }
+    }
+    console.error(JSON.stringify(stack[0][1], null, 4));
+    return stack[0][1];
+  }
+
+  Upraised.buildTree = buildTree;
 
   Markdown.dialects.Upraised = Upraised;
   Markdown.buildBlockOrder ( Upraised.block );

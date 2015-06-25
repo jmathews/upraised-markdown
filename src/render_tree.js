@@ -69,6 +69,10 @@ define(['./core', './markdown_helpers'], function(Markdown, MarkdownHelpers) {
 
     var html = convert_tree_to_html( input, refs , options );
     merge_text_nodes( html );
+    var md = new Markdown(dialect);
+    if (md.dialect.buildTree) {
+      html = md.dialect.buildTree(html);
+    }
     return html;
   };
 

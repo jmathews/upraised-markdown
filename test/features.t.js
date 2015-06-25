@@ -82,9 +82,9 @@ dialects.Maruku.push( "meta", "definition_lists", "tables" );
 
 dialects.Upraised = [
   "upraised",
-  'emphasis',
-  // 'links',
-  'lists',
+  // 'emphasis',
+  // // 'links',
+  // 'lists',
   // 'linebreaks',
   // 'images'
 ];
