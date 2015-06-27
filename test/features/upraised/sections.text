@@ -1,42 +1,27 @@
 
 // this is a comment, it's ignored
 
-$concept 51
+$section section-id
 
-@title This is a title
+$section/es section-id-spanish
 
-@image http://images.assets.org/asdfsf.png
+$section section-id // comment
 
-@tease This is a tease
+$section/es section-id // comment
 
-$introduction
+$SECTION section-id
 
-Here's a description in *markdown*.
+$SECTION/es section-id-spanish
 
-$explanation
+@field section-id
 
-$problem
+@field/es section-id-spanish
 
-@image http://assets.upraised.org/images/2.OA.1a.3.PNG
+@field section-id // comment
 
-There are 39 carrots on the table. Mom puts 17 more carrots on the table. How many carrots are on the table now?
+@field/es section-id // comment
 
-$step
+@FIELD section-id
 
-@image  http://assets.upraised.org/images/2.OA.1a.3.PNG
+@FIELD/es section-id-spanish
 
-To solve this problem using tens and ones blocks, draw 3 tens blocks and 9 ones blocks to represent the 39 carrots that were originally on the table.
-
-Then, draw 1 tens blocks and nine ones blocks to represent the carrots Mom added.
-
-Finally, count all of the blocks to determine the total number of carrots on the table.
-
-$answer
-
-There are 56 carrots on the table.
-
-$explanation
-
-$answer
-
-The answer is 44.

@@ -27,8 +27,8 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
     return [ ];
   };
 
-  Upraised.block.sectionHeader = function sectionHeader( block, next ) {
-    var m = block.match( /^([@$]\w+)\s*(.*?)\s*(?:\n|$)/ );
+  Upraised.block.blockHeader = function blockHeader( block, next ) {
+    var m = block.match( /^([@$][\w\-]+)(\/\w+)?\s*(.*?)\s*(?:\n|$)/ );
 
     if ( !m )
       return undefined;
@@ -41,22 +41,33 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
       element = 'field';
     }
 
-    element += '-' + m[1].slice(1);
-
     var header = [ element ];
 
-    if (m[2]) {
-      header.push({
-        'data-value': m[2]
-      });
+    var attrs = {};
+
+    attrs.type = m[1].slice(1).toLowerCase();
+
+    if (m[3]) {
+      var parts = m[3].split(/\s*\/\/\s*/);
+      attrs.value = parts[0];
+      if (parts[1]) {
+        attrs.comment = parts[1];
+      }
     }
+
+    if (m[2]) {
+      attrs.lang = m[2].slice(1);
+    }
+
+    header.push(attrs);
+
     // Array.prototype.push.apply(header, this.processInline(m[ 2 ]));
 
     if ( m[0].length < block.length )
       next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
 
     return [ header ];
-  },
+  };
 
 
   Upraised.block.equationHeader = function equationHeader (block, next) {
@@ -128,88 +139,60 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
     }
   };
 
-  var problemStepOrAnswerSchema = {
-    'field-image': true,
-    p: true,
-    ul: true,
-    ol: true
-  };
+  Upraised.inline['!['] = function image( text ) {
 
-  var conceptOrStrategySchema = {
-    'field-title': true,
-    'field-image': true,
-    'field-tease': true,
-    'section-introduction': {
-      p: true,
-      ul: true,
-      ol: true
-    },
-    'section-explanation': {
-      'section-problem': problemStepOrAnswerSchema,
-      'section-step': problemStepOrAnswerSchema,
-      'section-answer': problemStepOrAnswerSchema
-    }
-  };
+    // Without this guard V8 crashes hard on the RegExp
+    if (text.indexOf('(') >= 0 && text.indexOf(')') === -1) { return; }
 
-  var stdSchema = {
-    'section-strategy': conceptOrStrategySchema,
-    'section-concept': conceptOrStrategySchema,
-    '*': true
-  };
+    // Unlike images, alt text is plain text only. no other elements are
+    // allowed in there
 
-  function markError (node) {
-    var attrs;
-    if (typeof node[1] === 'object') {
-      attrs = node[1];
-    } else {
-      attrs = {};
-      node.splice(1, 0, attrs);
-    }
-    if (attrs.class) {
-      attrs.class += ' error';
-    } else {
-      attrs.class = 'error';
-    }
-  }
+    // ![Alt text](/path/to/img.jpg "Optional title")
+    //      1          2            3       4         <--- captures
+    //
+    // First attempt to use a strong URL regexp to catch things like parentheses. If it misses, use the
+    // old one.
+    var m = text.match(new RegExp("^!\\[(.*?)][ \\t]*\\((" + urlRegexp + ")\\)([ \\t])*([\"'].*[\"'])?")) ||
+            text.match( /^!\[(.*?)\][ \t]*\([ \t]*([^")]*?)(?:[ \t]+(["'])(.*?)\3)?[ \t]*\)/ );
 
-  function buildTree (html) {
+    if ( m ) {
+      if ( m[2] && m[2][0] === "<" && m[2][m[2].length-1] === ">" )
+        m[2] = m[2].substring( 1, m[2].length - 1 );
 
-    console.error('buildTree called');
+      m[2] = this.dialect.inline.__call__.call( this, m[2], /\\/ )[0];
 
-    var i, nodes, node;
-    var j;
-    var stack = [[docSchema, ['html']]];
-    var schema, target;
+      var attrs = { alt: m[1], href: m[2] || "" };
+      if ( m[4] !== undefined)
+        attrs.title = m[4];
 
-    nodes = html.slice(1);
-
-    for (i = 0; i < nodes.length; i++) {
-      node = nodes[i];
-
-      for (j = stack.length - 1; j >= 0; j--) {
-        schema = stack[j][0];
-        subSchema = schema[node[0]] || schema['*'];
-        if (subSchema) break;
-      }
-
-      if (!subSchema) {
-        // continue at same level, adding an error class to node
-        markError(node);
-        stack[stack.length - 1][1].push(node);
+      if (attrs.href[0] === '.') { // relative url must be object
+        var href = m[2];
+        var parts = m[2].split('/');
+        var base = parts[parts.length - 1];
+        parts = base.split('.');
+        var root = parts.slice(0, parts.length - 1).join('.');
+        // return [ m[0].length, [ "div", attrs, 'jeff', ['br'] ] ];
+        return [ m[0].length, [ 'div', [ "img", attrs ], ['br'], ['em', '$' + root + '$']] ];
       } else {
-        // reset level, based on closest schema match
-        stack = stack.slice(0, j + 1);
-        stack[stack.length - 1][1].push(node);
-        if (typeof subSchema === 'object') {
-          stack.push([subSchema, node]);
-        }
+        return [ m[0].length, [ "img", attrs ] ];
       }
-    }
-    console.error(JSON.stringify(stack[0][1], null, 4));
-    return stack[0][1];
-  }
 
-  Upraised.buildTree = buildTree;
+    }
+
+    // ![Alt text][id]
+    m = text.match( /^!\[(.*?)\][ \t]*\[(.*?)\]/ );
+
+    if ( m ) {
+      // We can't check if the reference is known here as it likely wont be
+      // found till after. Check it in md tree->hmtl tree conversion
+      return [ m[0].length, [ "img_ref", { alt: m[1], ref: m[2].toLowerCase(), original: m[0] } ] ];
+    }
+
+    // Just consume the '!['
+    return [ 2, "![" ];
+  };
+
+
 
   Markdown.dialects.Upraised = Upraised;
   Markdown.buildBlockOrder ( Upraised.block );
