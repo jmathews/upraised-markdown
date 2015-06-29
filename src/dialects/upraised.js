@@ -28,20 +28,21 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
   };
 
   Upraised.block.blockHeader = function blockHeader( block, next ) {
-    var m = block.match( /^([@$][\w\-]+)(\/\w+)?\s*(.*?)\s*(?:\n|$)/ );
+    var m = block.match( /^([@$#][\w\-]+)(\/\w+)?\s*(.*?)\s*(?:\n|$)/ );
 
     if ( !m )
       return undefined;
 
-    var element;
-
-    if (m[1][0] === '$') {
-      element = 'section';
-    } else {
-      element = 'field';
+    switch (m[1][0]) {
+    case '$':
+      header = ['section'];
+      break;
+    case '#':
+      header = ['field'];
+      break;
+    case '@':
+      header = ['reference'];
     }
-
-    var header = [ element ];
 
     var attrs = {};
 
