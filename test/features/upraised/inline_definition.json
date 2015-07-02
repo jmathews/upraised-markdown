@@ -6,7 +6,7 @@
   [ "p",
     "This is a paragraph with a ",
     [ "span", {
-      "class": "term",
+      "class": "term definition",
       "data-definition": "a term that has been defined"
       }, "defined term" ],
     " and included definition." ],

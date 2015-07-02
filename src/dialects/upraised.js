@@ -6,6 +6,9 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
       mk_block = MarkdownHelpers.mk_block,
       forEach = MarkdownHelpers.forEach;
 
+  // A robust regexp for matching URLs. Thanks: https://gist.github.com/dperini/729294
+  var urlRegexp = /(?:(?:https?|ftp):\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]+-?)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/[^\s]*)?/i.source;
+
   Upraised.block.atxHeader =
   Upraised.block.setextHeader =
   Upraised.block.code =
@@ -14,61 +17,6 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
   function (text) {
     return;
   };
-
-  Upraised.block.commentHeader = function commentHeader( block, next) {
-    var m = block.match( /^(\/\/)(.*?)(?:\n|$)/ );
-
-    if ( !m )
-      return undefined;
-
-    if ( m[0].length < block.length )
-      next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
-
-    return [ ];
-  };
-
-  Upraised.block.blockHeader = function blockHeader( block, next ) {
-    var m = block.match( /^([@$][\w\-]+)(\/\w+)?\s*(.*?)\s*(?:\n|$)/ );
-
-    if ( !m )
-      return undefined;
-
-    var element;
-
-    if (m[1][0] === '$') {
-      element = 'section';
-    } else {
-      element = 'field';
-    }
-
-    var header = [ element ];
-
-    var attrs = {};
-
-    attrs.type = m[1].slice(1).toLowerCase();
-
-    if (m[3]) {
-      var parts = m[3].split(/\s*\/\/\s*/);
-      attrs.value = parts[0];
-      if (parts[1]) {
-        attrs.comment = parts[1];
-      }
-    }
-
-    if (m[2]) {
-      attrs.lang = m[2].slice(1);
-    }
-
-    header.push(attrs);
-
-    // Array.prototype.push.apply(header, this.processInline(m[ 2 ]));
-
-    if ( m[0].length < block.length )
-      next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
-
-    return [ header ];
-  };
-
 
   Upraised.block.equationHeader = function equationHeader (block, next) {
     var m = block.match( /^(%%)\s*(.*?)\s*(?:\n|$)/ );
@@ -125,7 +73,7 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
       parts = m[2].split(/\s*\|\s*/);
       if (parts.length === 2) {
         return [ m[0].length, [ "span", {
-          class: 'term',
+          class: 'term definition',
           "data-definition": parts[1].trim()
         }, parts[0].trim()] ];
       } else {
