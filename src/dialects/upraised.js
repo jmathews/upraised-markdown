@@ -19,7 +19,7 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
   };
 
   Upraised.block.equationHeader = function equationHeader (block, next) {
-    var m = block.match( /^(%%)\s*(.*?)\s*(?:\n|$)/ );
+    var m = block.match( /^(%%%)\s*(.*?)\s*(?:\n|$)/ );
 
     if ( !m )
       return undefined;
