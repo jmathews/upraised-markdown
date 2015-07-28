@@ -24,7 +24,7 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
     if ( !m )
       return undefined;
 
-    var header = [ "equation-block", m[2] ];
+    var header = [ "equation-block", {math: m[2]} ];
 
     if ( m[0].length < block.length )
       next.unshift( mk_block( block.substr( m[0].length ), block.trailing, block.lineNumber + 2 ) );
@@ -57,7 +57,7 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
     var m = text.match( /(%%)(([\s\S]*?)\1)/ );
 
     if ( m && m[2] )
-      return [ m[1].length + m[2].length, [ "equation-span", m[3].trim() ] ];
+      return [ m[1].length + m[2].length, [ "equation-span", {math: m[3].trim()} ] ];
     else {
       // TODO: No matching end code found - warn!
       return [ 2, "%%" ];

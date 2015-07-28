@@ -1,9 +1,9 @@
 [ "html",
   [ "p",
     "this is an ",
-    [ "equation-span", "inline equation" ],
+    [ "equation-span", {"math": "inline equation" }],
     "." ],
   [ "p",
     "and a second paragraph with one ",
-    [ "equation-span", "inline equation" ],
+    [ "equation-span", { "math": "inline equation" } ],
     " and another." ] ]
