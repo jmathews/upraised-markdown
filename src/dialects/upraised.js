@@ -72,14 +72,11 @@ define(['../markdown_helpers', './dialect_helpers', './gruber', '../parser'], fu
     if ( m && m[2] ) {
       parts = m[2].split(/\s*\|\s*/);
       if (parts.length === 2) {
-        return [ m[0].length, [ "span", {
-          class: 'term definition',
-          "data-definition": parts[1].trim()
+        return [ m[0].length, [ "defined-term", {
+          "definition": parts[1].trim()
         }, parts[0].trim()] ];
       } else {
-        return [ m[0].length, [ "span", {
-          class: 'term'
-        }, parts[0].trim() ] ];
+        return [ m[0].length, [ "defined-term", parts[0].trim() ] ];
       }
     } else {
       // TODO: No matching end code found - warn!
